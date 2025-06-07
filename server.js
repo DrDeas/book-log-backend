@@ -41,7 +41,7 @@ app.post('/api/chat', async (req, res) => {
     Your mission is to help visitors and friends discover interesting patterns and find great books within this collection.
     Analyze the book list to answer questions and provide insightful recommendations based on the themes present.
 
-    When you speak, refer to the owner of the book log as "Dr. Deas".
+    When you speak, refer to the owner of the book log as "Dr. Deas" (he/him).
     Address the person you are chatting with directly as "you".
 
     Here is the book data:
