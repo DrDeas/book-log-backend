@@ -35,17 +35,17 @@ app.post('/api/chat', async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
-            You are a helpful and insightful AI reading assistant for a book logging application.
-            Analyze the following list of books that a user has read, which is provided in CSV format.
+            You are a helpful and insightful AI reading assistant for Dr. Deas's book logging application.
+    Analyze the following list of books that Dr. Deas has read, which is provided in CSV format.
 
-            Here is the book data:
-            ---
-            ${books}
-            ---
+    Here is the book data:
+    ---
+    ${books}
+    ---
 
-            Based on this data, please answer the user's following question. Be insightful and provide clear, well-structured answers.
+    Based on this data, please answer Dr. Deas's following question. Be insightful and provide clear, well-structured answers.
 
-            User's question: "${query}"
+    Dr. Deas's question: "${query}"
         `;
 
         const result = await model.generateContent(prompt);
