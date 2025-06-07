@@ -1,13 +1,32 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config(); // This loads the .env file
+const { MongoClient } = require('mongodb'); // Import MongoDB client
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// A simple fix for CORS (Cross-Origin Resource Sharing) during development
-// This allows your frontend (on a different 'origin') to talk to your backend
+// --- Database Setup ---
+const mongoUri = process.env.MONGO_URI;
+const client = new MongoClient(mongoUri);
+let interactionsCollection; // This will hold our database collection
+
+async function connectToDb() {
+    try {
+        await client.connect();
+        const database = client.db("BookLogChat"); // You can name your database
+        interactionsCollection = database.collection("interactions");
+        console.log("Successfully connected to the database.");
+    } catch (error) {
+        console.error("Failed to connect to the database", error);
+        process.exit(1); // Exit if we can't connect to the DB
+    }
+}
+
+connectToDb(); // Connect to the DB when the server starts
+// ----------------------
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -16,18 +35,11 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
-// Check if the API key is loaded
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY is not set in the .env file.");
-}
-
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
-// Create an API endpoint to handle chat requests
 app.post('/api/chat', async (req, res) => {
     try {
         const { books, query } = req.body;
-
         if (!books || !query) {
             return res.status(400).send({ error: 'Missing books data or user query.' });
         }
@@ -57,6 +69,16 @@ app.post('/api/chat', async (req, res) => {
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = await response.text();
+
+        // --- Save the interaction to the database ---
+        if (interactionsCollection) {
+            await interactionsCollection.insertOne({
+                userQuery: query,
+                aiResponse: text,
+                timestamp: new Date()
+            });
+        }
+        // ------------------------------------------
 
         res.json({ reply: text });
 
